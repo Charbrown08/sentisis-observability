@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Update system and install Docker
+# Update and install Docker
 yum update -y
 amazon-linux-extras install docker -y
 service docker start
@@ -11,22 +11,22 @@ curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compo
   -o /usr/local/bin/docker-compose
 chmod +x /usr/local/bin/docker-compose
 
-# Create directory for observability setup
+# Create working directory
 mkdir -p /opt/observability
 cd /opt/observability
 
-# Create Prometheus config file
+# Prometheus configuration
 cat > prometheus.yml <<EOL
 global:
   scrape_interval: 10s
 
 scrape_configs:
-  - job_name: 'ec2-node'
+  - job_name: 'node'
     static_configs:
-      - targets: ['localhost:9100']
+      - targets: ['node_exporter:9100']
 EOL
 
-# Create Grafana datasource file
+# Grafana provisioning for Prometheus as data source
 mkdir -p provisioning/datasources
 cat > provisioning/datasources/datasource.yml <<EOL
 apiVersion: 1
@@ -39,7 +39,7 @@ datasources:
     isDefault: true
 EOL
 
-# Create Docker Compose file
+# Docker Compose file including node_exporter
 cat > docker-compose.yml <<EOL
 version: '3'
 
@@ -57,7 +57,12 @@ services:
       - "3000:3000"
     volumes:
       - ./provisioning:/etc/grafana/provisioning
+
+  node_exporter:
+    image: prom/node-exporter:latest
+    ports:
+      - "9100:9100"
 EOL
 
-# Launch containers
+# Launch all services
 docker-compose up -d
