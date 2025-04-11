@@ -26,7 +26,7 @@ scrape_configs:
       - targets: ['node_exporter:9100']
 EOL
 
-# Grafana provisioning for Prometheus as data source
+# Grafana provisioning: datasource
 mkdir -p provisioning/datasources
 cat > provisioning/datasources/datasource.yml <<EOL
 apiVersion: 1
@@ -39,7 +39,80 @@ datasources:
     isDefault: true
 EOL
 
-# Docker Compose file including node_exporter
+# Grafana provisioning: dashboard loader
+mkdir -p provisioning/dashboards
+cat > provisioning/dashboards/dashboard.yml <<EOL
+apiVersion: 1
+
+providers:
+  - name: 'default'
+    folder: ''
+    type: file
+    options:
+      path: /etc/grafana/provisioning/dashboards
+EOL
+
+# Grafana dashboard JSON: CPU + RAM
+cat > provisioning/dashboards/node-dashboard.json <<EOL
+{
+  "annotations": { "list": [ { "builtIn": 1, "type": "dashboard" } ] },
+  "editable": true,
+  "id": null,
+  "iteration": 1623340800111,
+  "panels": [
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": { "unit": "percent" },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "reduceOptions": { "calcs": ["avg"], "fields": "", "values": false },
+        "orientation": "horizontal",
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "targets": [
+        {
+          "expr": "100 - (avg by (instance) (irate(node_cpu_seconds_total{mode='idle'}[5m])) * 100)",
+          "legendFormat": "CPU Usage",
+          "refId": "A"
+        }
+      ],
+      "title": "CPU Usage (%)",
+      "type": "gauge"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": { "unit": "bytes" },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "id": 2,
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "targets": [
+        {
+          "expr": "node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes",
+          "legendFormat": "RAM Usage",
+          "refId": "A"
+        }
+      ],
+      "title": "RAM Usage",
+      "type": "stat"
+    }
+  ],
+  "schemaVersion": 30,
+  "title": "EC2 System Metrics",
+  "version": 1
+}
+EOL
+
+# Docker Compose file for Prometheus, Grafana, node_exporter
 cat > docker-compose.yml <<EOL
 version: '3'
 
@@ -64,5 +137,5 @@ services:
       - "9100:9100"
 EOL
 
-# Launch all services
+# Launch all containers
 docker-compose up -d
