@@ -1,0 +1,1 @@
+{"Modules":[{"Key":"","Source":"","Dir":"."},{"Key":"iam_role","Source":"./modules/iam-role-secrets","Dir":"modules/iam-role-secrets"},{"Key":"secrets_manager","Source":"./modules/secrets-manager","Dir":"modules/secrets-manager"}]}

@@ -13,6 +13,17 @@ provider "aws" {
 
 }
 
+
+module "secrets_manager" {
+  source           = "./modules/secrets-manager"
+  grafana_password = var.password_secret_name
+
+}
+module "iam_role" {
+  source             = "./modules/iam-role-secrets"
+  grafana_secret_arn = module.secrets_manager.grafana_secret_arn
+}
+
 resource "aws_security_group" "observability_sg" {
   name        = "${var.project_name}-sg"
   description = "Allow SSH, Prometheus and Grafana ports"
@@ -62,6 +73,8 @@ resource "aws_instance" "observability_ec2" {
   associate_public_ip_address = true
   key_name                    = var.key_name
   user_data                   = file("${path.module}/../scripts/userdata.sh")
+
+  iam_instance_profile = module.iam_role.instance_profile_name
 
   tags = {
     Name        = "${var.project_name}-ec2"

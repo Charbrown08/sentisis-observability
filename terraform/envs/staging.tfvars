@@ -22,3 +22,6 @@ project_name = "sentisis-staging"
 
 # Entorno para etiquetas
 environment = "staging"
+
+# Nombre del secreto de Grafana en Secrets Manager
+password_secret_name = "grafana/staging"

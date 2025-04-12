@@ -1,19 +1,41 @@
 #!/bin/bash
+set -e
+exec > /tmp/debug.log 2>&1
 
-# Update and install Docker
+# Update system and install dependencies
 yum update -y
 amazon-linux-extras install docker -y
-service docker start
-usermod -a -G docker ec2-user
+yum install -y jq unzip curl aws-cli
 
-# Install Docker Compose
-curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" \
-  -o /usr/local/bin/docker-compose
-chmod +x /usr/local/bin/docker-compose
+# Start Docker
+systemctl start docker
+usermod -a -G docker ec2-user
+systemctl enable docker
 
 # Create working directory
 mkdir -p /opt/observability
 cd /opt/observability
+
+# Fetch secret from AWS
+SECRET=$(aws secretsmanager get-secret-value \
+  --region us-east-1 \
+  --secret-id grafana/admin \
+  --query SecretString \
+  --output text)
+
+echo "[INFO] Secreto obtenido: $SECRET"
+
+GRAFANA_USER=$(echo "$SECRET" | jq -r .username)
+GRAFANA_PASSWORD=$(echo "$SECRET" | jq -r .password)
+
+echo "[INFO] USER=$GRAFANA_USER - PASS=$GRAFANA_PASSWORD"
+
+# Install Docker Compose (latest version)
+curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" \
+  -o /usr/local/bin/docker-compose
+chmod +x /usr/local/bin/docker-compose
+ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+docker-compose version
 
 # Prometheus configuration
 cat > prometheus.yml <<EOL
@@ -57,22 +79,15 @@ cat > provisioning/dashboards/node-dashboard.json <<EOL
 {
   "annotations": { "list": [ { "builtIn": 1, "type": "dashboard" } ] },
   "editable": true,
-  "id": null,
-  "iteration": 1623340800111,
   "panels": [
     {
       "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": { "unit": "percent" },
-        "overrides": []
-      },
+      "fieldConfig": { "defaults": { "unit": "percent" }, "overrides": [] },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
       "id": 1,
       "options": {
         "reduceOptions": { "calcs": ["avg"], "fields": "", "values": false },
-        "orientation": "horizontal",
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true
+        "orientation": "horizontal"
       },
       "targets": [
         {
@@ -86,10 +101,7 @@ cat > provisioning/dashboards/node-dashboard.json <<EOL
     },
     {
       "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": { "unit": "bytes" },
-        "overrides": []
-      },
+      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
       "id": 2,
       "options": {
@@ -128,6 +140,9 @@ services:
     image: grafana/grafana:latest
     ports:
       - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=$GRAFANA_USER
+      - GF_SECURITY_ADMIN_PASSWORD=$GRAFANA_PASSWORD
     volumes:
       - ./provisioning:/etc/grafana/provisioning
 

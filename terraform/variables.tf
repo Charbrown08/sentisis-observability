@@ -53,3 +53,9 @@ variable "environment" {
   description = "Environment name for tagging purposes"
   type        = string
 }
+
+# Nombre del secreto de Grafana en Secrets Manager
+variable "password_secret_name" {
+  description = "Name of the Grafana secret in Secrets Manager"
+  type        = string
+}
