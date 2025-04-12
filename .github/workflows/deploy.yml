@@ -28,7 +28,7 @@ jobs:
           aws-region: us-east-1
 
       - name: 🛡️ Trivy - Filesystem scan (IaC)
-        uses: aquasecurity/trivy-action@v0.11.0
+        uses: aquasecurity/trivy-action@latest
         with:
           scan-type: 'fs'
           severity: 'HIGH,CRITICAL'
