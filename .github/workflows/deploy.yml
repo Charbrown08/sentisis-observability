@@ -54,6 +54,10 @@ jobs:
           directory: ./terraform
           soft_fail: true
 
+      - name: 🔧 Terraform init
+        run: terraform init
+        working-directory: terraform        
+
       - name: ✅ Terraform validate
         run: terraform validate
         working-directory: terraform
