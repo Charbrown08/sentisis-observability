@@ -5,75 +5,12 @@ on:
     branches:
       - master
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v3
-
-      - name: 📦 Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.9.8
-
-      - name: 🔐 Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-
-      - name: 🛡️ Security Scan of filesystem (IaC) with Trivy
-        uses: aquasecurity/trivy-action@v0.11.0
-        with:
-          scan-type: 'fs'
-          severity: 'HIGH,CRITICAL'
-          ignore-unfixed: true
-          exit-code: 1
-          path: .
-
-      - name: 🐳 Security Scan of Dockerfiles (prometheus + grafana)
-        run: |
-          docker pull prom/prometheus
-          docker pull grafana/grafana
-          trivy image --exit-code 1 --severity CRITICAL,HIGH prom/prometheus
-          trivy image --exit-code 1 --severity CRITICAL,HIGH grafana/grafana
-
-      - name: 🔍 Detect secrets in repo
-        uses: gitleaks/gitleaks-action@v2
-        with:
-          config-path: .gitleaks.toml
-
-      - name: ✅ Validate Terraform syntax
-        run: terraform validate
-
-      - name: 🚧 Terraform Format Check
-        run: terraform fmt -check
-
-      - name: 📊 Terraform Plan
-        run: terraform plan -var-file="terraform/envs/staging.tfvars" -out=tfplan.binary
-
-      - name: ⚖️ Show Terraform plan summary
-        run: terraform show -no-color tfplan.binary
-
-      - name: 🚀 Terraform Apply
-        run: terraform apply -auto-approve tfplan.binary
-name: Deploy Observability Stack with DevSecOps
-
-on:
-  push:
-    branches:
-      - master
-
 env:
   ENVIRONMENT: staging
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v3
