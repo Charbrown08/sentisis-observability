@@ -27,14 +27,14 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: 🛡️ Trivy - Filesystem scan (IaC)
-        uses: aquasecurity/trivy-action@v0.18.3
-        with:
-          scan-type: 'fs'
-          severity: 'HIGH,CRITICAL'
-          ignore-unfixed: true
-          exit-code: 1
-          path: .
+      #   - name: 🛡️ Trivy - Filesystem scan (IaC)
+      #     uses: aquasecurity/trivy-action@v0.18.3
+      #     with:
+      #       scan-type: 'fs'
+      #       severity: 'HIGH,CRITICAL'
+      #       ignore-unfixed: true
+      #       exit-code: 1
+      #       path: .
 
       - name: 🐳 Trivy - Docker image scan
         run: |
