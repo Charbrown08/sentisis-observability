@@ -56,18 +56,23 @@ jobs:
 
       - name: ✅ Terraform validate
         run: terraform validate
+        working-directory: terraform
 
       - name: 🚧 Terraform fmt check
         run: terraform fmt -check
+        working-directory: terraform
 
       - name: 📊 Terraform plan
         run: terraform plan -var-file="terraform/envs/${{ env.ENVIRONMENT }}.tfvars" -out=tfplan.binary
+        working-directory: terraform
 
       - name: ⚖️ Show Terraform plan
         run: terraform show -no-color tfplan.binary
+        working-directory: terraform
 
       - name: 🚀 Terraform apply
         run: terraform apply -auto-approve tfplan.binary
+        working-directory: terraform
 
       - name: ✅ Notify success - Google Chat
         if: success()
