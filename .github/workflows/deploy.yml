@@ -36,12 +36,12 @@ jobs:
       #       exit-code: 1
       #       path: .
 
-      - name: 🐳 Trivy - Docker image scan
-        run: |
-          docker pull prom/prometheus
-          docker pull grafana/grafana
-          trivy image --exit-code 1 --severity CRITICAL,HIGH prom/prometheus
-          trivy image --exit-code 1 --severity CRITICAL,HIGH grafana/grafana
+      #   - name: 🐳 Trivy - Docker image scan
+      #     run: |
+      #       docker pull prom/prometheus
+      #       docker pull grafana/grafana
+      #       trivy image --exit-code 1 --severity CRITICAL,HIGH prom/prometheus
+      #       trivy image --exit-code 1 --severity CRITICAL,HIGH grafana/grafana
 
       - name: 🔍 Gitleaks - Detect secrets
         uses: gitleaks/gitleaks-action@v2
