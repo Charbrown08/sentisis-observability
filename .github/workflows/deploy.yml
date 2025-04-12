@@ -70,6 +70,9 @@ jobs:
         run: terraform plan -var-file="envs/${{ env.ENVIRONMENT }}.tfvars" -out=tfplan.binary
         working-directory: terraform
 
+      - name: 🗑️ Delete Grafana admin secret
+        run: aws secretsmanager delete-secret --secret-id grafana/admin --force-delete-without-recovery
+
       - name: ⚖️ Show Terraform plan
         run: terraform show -no-color tfplan.binary
         working-directory: terraform

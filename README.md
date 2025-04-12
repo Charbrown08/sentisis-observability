@@ -11,9 +11,9 @@ Este proyecto implementa un stack de observabilidad utilizando **Prometheus** y 
   - [Descripción General](#descripción-general)
   - [Requisitos Previos](#requisitos-previos)
   - [Estructura del Proyecto](#estructura-del-proyecto)
-- [Inicializar el proyecto](#inicializar-el-proyecto)
-- [Revisar el plan de despliegue](#revisar-el-plan-de-despliegue)
-- [Aplicar el plan de infraestructura](#aplicar-el-plan-de-infraestructura)
+  - [Cómo Ejecutar el Proyecto](#cómo-ejecutar-el-proyecto)
+    - [🧪 Opción 1: Ejecutar manualmente con Terraform](#-opción-1-ejecutar-manualmente-con-terraform)
+    - [🚀 Opción 2: Automatización vía GitHub Actions](#-opción-2-automatización-vía-github-actions)
 
 ---
 
@@ -70,48 +70,51 @@ Antes de comenzar, asegúrate de tener:
 │       └── iam-role/          # Módulo IAM para permisos y perfil de instancia
 ├── docker-compose.yml         # Composición de servicios: Prometheus + Grafana + Node Exporter
 └── README.md                  # Este documento
+```
 
-Cómo Ejecutar el Proyecto
-🧪 Opción 1: Ejecutar manualmente con Terraform
-bash
-Copiar
-Editar
+---
+
+## Cómo Ejecutar el Proyecto
+
+### 🧪 Opción 1: Ejecutar manualmente con Terraform
+
+```bash
 cd terraform
 
 # Inicializar el proyecto
 terraform init
 
 # Revisar el plan de despliegue
-terraform plan -var-file="envs/staging.tfvars"
+terraform plan -var-file="*envs*/staging.tfvars"
 
 # Aplicar el plan de infraestructura
 terraform apply -auto-approve -var-file="envs/staging.tfvars"
+```
+
 Luego accede a la IP pública de la instancia EC2:
 
-Prometheus: http://<IP>:9090
-
-Grafana: http://<IP>:3000
+- **Prometheus**: http://<IP>:9090  
+- **Grafana**: http://<IP>:3000
 
 Las credenciales de Grafana pueden ser recuperadas desde Secrets Manager (si se configuraron).
 
-🚀 Opción 2: Automatización vía GitHub Actions
+---
+
+### 🚀 Opción 2: Automatización vía GitHub Actions
+
 Asegúrate de tener los secretos configurados en tu repositorio:
 
-AWS_ACCESS_KEY_ID
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `GOOGLE_CHAT_WEBHOOK_URL` (opcional)
 
-AWS_SECRET_ACCESS_KEY
-
-GOOGLE_CHAT_WEBHOOK_URL (opcional)
-
-Realiza un push a la rama master.
+Realiza un `push` a la rama `master`.  
 Esto desencadenará automáticamente un pipeline que:
 
-Valida y formatea tu código Terraform
+1. Valida y formatea tu código Terraform  
+2. Escanea configuración insegura (Checkov)  
+3. Detecta secretos (Gitleaks)  
+4. Despliega automáticamente la infraestructura  
+5. Notifica el resultado en Google Chat
 
-Escanea configuración insegura (Checkov)
-
-Detecta secretos (Gitleaks)
-
-Despliega automáticamente la infraestructura
-
-Notifica el resultado en Google Chat
+---
